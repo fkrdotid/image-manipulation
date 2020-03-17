@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Pengolahan Citra</title>
+  <!-- Tell the browser to be responsive to screen width -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Pengolahan Citra</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+  </nav>
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <!-- Small boxes (Stat box) -->
+        <div class="row">
+                <div class="col-md-12">
+                    <ul>
+                        <li>LIST ANGGOTA :</li>
+                        <li>DONNY RAMDHANI - 0617103027</li>
+                        <li>FIKRI MUJADDID - 0617103027</li>
+                        <li>JAJANG M MIMBAR - 0617103027</li>
+                    </ul>
+                </div>
+                <div class="col-md-5">
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="text-center">Citra Awal</td>
+                        </tr>
+                        <td><canvas id="canvas"></canvas></td>
+                    </table>
+                </div>
+
+                <div class="col-md-2">
+                    <input type="file" id="images" onChange="changeImage()" class="btn btn-primary btn-block">
+                    <!-- <button onclick="" id="images" class="btn btn-primary btn-block">Grayscale</button> -->
+                    <button onClick="grayscale()" class="btn btn-primary btn-block">Grayscale</button>
+                    <button onClick="blackWhite()" class="btn btn-primary btn-block">Black White</button>
+                    <button onClick="brightness()" class="btn btn-primary btn-block">Brightness</button>
+                    <button onClick="constrast()" class="btn btn-primary btn-block">Contrast</button>
+                    <button onClick="convert3bit()" class="btn btn-primary btn-block">Konversi 5 Bit</button>
+                    <button onClick="inverse()" class="btn btn-primary btn-block">Inverse</button>
+                    <button onClick="negative()" class="btn btn-primary btn-block">Negative Image</button>
+                </div>
+
+                <div class="col-md-5">
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="text-center">Citra akhir</td>
+                        </tr>
+                        <td><canvas id="canvas_result"></canvas></td>
+                    </table>
+                </div>
+        </div>
+        <!-- /.row (main row) -->
+      </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+    
+
+  <!-- Control Sidebar -->
+  <aside class="control-sidebar control-sidebar-dark">
+    <!-- Control sidebar content goes here -->
+  </aside>
+  <!-- /.control-sidebar -->
+</div>
+
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
+
+
+<script>
+var canvas, ctx, newImage = true, grayscale;
+
+var canvasResult = document.getElementById('canvas_result');
+canvasResult.width = 340;
+canvasResult.height = 340;
+ctxResult = canvasResult.getContext('2d');
+
+
+function changeImage() {
+	newImage = true;
+}
+
+document.getElementById('images').onchange = function(e) {
+	var img = new Image();
+	img.onload = draw;
+	img.onerror = failed;
+	img.src = URL.createObjectURL(this.files[0]);
+	newImage = true;
+};
+
+function draw() {
+	canvas = document.getElementById('canvas');
+	canvas.width = 340;
+	canvas.height = 340;
+	ctx = canvas.getContext('2d');
+	ctx.drawImage(this, 0,0, this.width, this.height, 0, 0, canvas.width, canvas.height);
+}
+
+function grayscale() {
+	if (newImage) {
+		var grayscale = ctx.getImageData(0,0, canvas.width, canvas.height);
+		var pixels = processPixelToGrayscale(grayscale);	
+	} else
+		var pixels = grayscale;
+	ctxResult.putImageData(pixels, 0, 0);
+}
+
+function blackWhite() {
+	if (newImage) {
+		var grayscale = ctx.getImageData(0,0, canvas.width, canvas.height);
+		var pixels = processPixelToGrayscale(grayscale);	
+	} else
+		var pixels = grayscale;
+
+	for (j = 0; j < pixels.height; j++) {
+		for (i = 0; i < pixels.width; i++) {
+			var index = (i * 4) * pixels.width + (j * 4);
+			if (pixels.data[index] < 128)
+				pixels.data[index] = 0;
+			else
+				pixels.data[index] = 255;
+
+			if (pixels.data[index + 1] < 128)
+				pixels.data[index + 1] = 0;
+			else
+				pixels.data[index + 1] = 255;
+
+			if (pixels.data[index + 2] < 128)
+				pixels.data[index + 2] = 0;
+			else
+				pixels.data[index + 2] = 255;
+		}
+	}
+
+	ctxResult.putImageData(pixels, 0, 0);
+}
+
+function brightness() {
+	if (newImage) {
+		var grayscale = ctx.getImageData(0,0, canvas.width, canvas.height);
+		var pixels = processPixelToGrayscale(grayscale);
+	} else
+		var pixels = grayscale;
+
+	for (j = 0; j < pixels.height; j++) {
+		for (i = 0; i < pixels.width; i++) {
+			var index = (i * 4) * pixels.width + (j * 4);
+
+			pixels.data[index] += 100;
+			pixels.data[index + 1] += 100;
+			pixels.data[index + 2] += 100;
+		}
+	}
+
+	ctxResult.putImageData(pixels, 0, 0);
+}
+
+function constrast() {
+	if (newImage) {
+		var grayscale = ctx.getImageData(0,0, canvas.width, canvas.height);
+		var pixels = processPixelToGrayscale(grayscale);	
+	} else
+		var pixels = grayscale;
+
+	for (j = 0; j < pixels.height; j++) {
+		for (i = 0; i < pixels.width; i++) {
+			var index = (i * 4) * pixels.width + (j * 4);
+
+			pixels.data[index] *= 2.5;
+			pixels.data[index + 1] *= 2.5;
+			pixels.data[index + 2] *= 2.5;
+		}
+	}
+
+	ctxResult.putImageData(pixels, 0, 0);	
+}
+
+function convert3bit() {
+	if (newImage) {
+		var grayscale = ctx.getImageData(0,0, canvas.width, canvas.height);
+		var pixels = processPixelToGrayscale(grayscale);	
+	} else
+		var pixels = grayscale;
+
+	for (j = 0; j < pixels.height; j++) {
+		for (i = 0; i < pixels.width; i++) {
+			var index = (i * 4) * pixels.width + (j * 4);
+
+			pixels.data[index] = pixels.data[index] / 255 * 31;
+			pixels.data[index + 1] = pixels.data[index + 1] / 255 * 31;
+			pixels.data[index + 2] = pixels.data[index + 2] / 255 * 31;
+		}
+	}
+
+	ctxResult.putImageData(pixels, 0, 0);
+}
+
+function inverse() {
+	if (newImage) {
+		var grayscale = ctx.getImageData(0,0, canvas.width, canvas.height);
+		var pixels = processPixelToGrayscale(grayscale);
+	} else
+		var pixels = grayscale;
+
+	for (j = 0; j < pixels.height; j++) {
+		for (i = 0; i < pixels.width; i++) {
+			var index = (i * 4) * pixels.width + (j * 4);
+
+			pixels.data[index] = 255 - pixels.data[index];
+			pixels.data[index + 1] = 255 - pixels.data[index + 1];
+			pixels.data[index + 2] = 255 - pixels.data[index + 2];
+		}
+	}
+
+	ctxResult.putImageData(pixels, 0, 0);
+}
+
+function negative() {
+	var pixels = ctx.getImageData(0,0, canvas.width, canvas.height);
+
+	for (j = 0; j < pixels.height; j++) {
+		for (i = 0; i < pixels.width; i++) {
+			var index = (i * 4) * pixels.width + (j * 4);
+
+			pixels.data[index] = 255 - pixels.data[index];
+			pixels.data[index + 1] = 255 - pixels.data[index + 1];
+			pixels.data[index + 2] = 255 - pixels.data[index + 2];
+		}
+	}
+
+	ctxResult.putImageData(pixels, 0, 0);
+}
+
+function processPixelToGrayscale(grayscale) {
+	// This loop gets every pixels on the image and
+	for (j = 0; j < grayscale.height; j++) {
+		for (i = 0; i < grayscale.width; i++) {
+			var index = (i * 4) * grayscale.width + (j * 4);
+			var red = grayscale.data[index];
+			var green = grayscale.data[index + 1];
+			var blue = grayscale.data[index + 2];
+			var alpha = grayscale.data[index + 3];
+			var average = (red + green + blue) / 3;
+			grayscale.data[index] = average;
+			grayscale.data[index + 1] = average;
+			grayscale.data[index + 2] = average;
+			grayscale.data[index + 3] = alpha;
+		}
+	}
+	return grayscale;
+}
+
+function failed() {
+	console.error("The provided file couldn't be loaded as an Image media");
+}
+
+</script>
